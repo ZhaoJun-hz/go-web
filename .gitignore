@@ -1,0 +1,13 @@
+.idea
+.vscode
+*/.DS_Store
+static/uploadfile
+public/*
+i421
+*.exe
+main
+log/*.log
+config/config.yaml
+*/.DS_Store
+go.sum
+tmp
