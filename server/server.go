@@ -7,12 +7,26 @@ import (
 
 type HandlerFunc func(w http.ResponseWriter, r *http.Request)
 
-type router struct {
+type routerGroup struct {
+	name           string
 	handlerFuncMap map[string]HandlerFunc
 }
 
-func (r *router) Add(name string, handlerFunc HandlerFunc) {
+func (r *routerGroup) Add(name string, handlerFunc HandlerFunc) {
 	r.handlerFuncMap[name] = handlerFunc
+}
+
+func (r *router) Group(name string) *routerGroup {
+	rg := &routerGroup{
+		name:           name,
+		handlerFuncMap: make(map[string]HandlerFunc),
+	}
+	r.routerGroups = append(r.routerGroups, rg)
+	return rg
+}
+
+type router struct {
+	routerGroups []*routerGroup
 }
 
 type Engine struct {
@@ -21,16 +35,17 @@ type Engine struct {
 
 func New() *Engine {
 	return &Engine{
-		router: router{
-			handlerFuncMap: make(map[string]HandlerFunc),
-		},
+		router: router{},
 	}
 }
 
 func (e *Engine) Run() {
-	for name, handlerFunc := range e.handlerFuncMap {
-		http.HandleFunc(name, handlerFunc)
+	for _, rg := range e.routerGroups {
+		for name, handlerFunc := range rg.handlerFuncMap {
+			http.HandleFunc("/"+rg.name+name, handlerFunc)
+		}
 	}
+
 	err := http.ListenAndServe(":8111", nil)
 	if err != nil {
 		log.Fatal(err)

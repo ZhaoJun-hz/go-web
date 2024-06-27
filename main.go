@@ -8,8 +8,19 @@ import (
 
 func main() {
 	engine := server.New()
-	engine.Add("/hello", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "hello")
+	userGroup := engine.Group("user")
+	userGroup.Add("/list", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "user list")
+	})
+	userGroup.Add("/info", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "user info")
+	})
+	productGroup := engine.Group("product")
+	productGroup.Add("/list", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "product list")
+	})
+	productGroup.Add("/info", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "product info")
 	})
 	engine.Run()
 }
