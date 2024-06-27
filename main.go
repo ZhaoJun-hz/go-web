@@ -9,17 +9,17 @@ import (
 func main() {
 	engine := server.New()
 	userGroup := engine.Group("user")
-	userGroup.Add("/list", func(w http.ResponseWriter, r *http.Request) {
+	userGroup.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "user list")
 	})
-	userGroup.Add("/info", func(w http.ResponseWriter, r *http.Request) {
+	userGroup.POST("/info", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "user info")
 	})
 	productGroup := engine.Group("product")
-	productGroup.Add("/list", func(w http.ResponseWriter, r *http.Request) {
+	productGroup.Get("/list", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "product list")
 	})
-	productGroup.Add("/info", func(w http.ResponseWriter, r *http.Request) {
+	productGroup.POST("/info", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "product info")
 	})
 	engine.Run()
