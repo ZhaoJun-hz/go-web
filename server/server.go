@@ -11,6 +11,7 @@ type routerGroup struct {
 	name string
 	// key 路由path map[string]HandlerFunc，key，请求类型，GET、POST等
 	handlerFuncMap map[string]map[string]HandlerFunc
+	tree           *treeNode
 }
 
 func (r routerGroup) handle(name string, method string, handlerFunc HandlerFunc) {
@@ -23,6 +24,8 @@ func (r routerGroup) handle(name string, method string, handlerFunc HandlerFunc)
 		panic("有重复的路由")
 	}
 	r.handlerFuncMap[name][http.MethodGet] = handlerFunc
+
+	r.tree.Put(name)
 }
 
 func (r *routerGroup) Get(name string, handlerFunc HandlerFunc) {
@@ -45,6 +48,7 @@ func (r *router) Group(name string) *routerGroup {
 	rg := &routerGroup{
 		name:           name,
 		handlerFuncMap: make(map[string]map[string]HandlerFunc),
+		tree:           &treeNode{name: "/", isEnd: true, children: make([]*treeNode, 0)},
 	}
 	r.routerGroups = append(r.routerGroups, rg)
 	return rg
@@ -67,37 +71,27 @@ func New() *Engine {
 func (e *Engine) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	method := r.Method
 	for _, rg := range e.routerGroups {
-		for name, handlerFuncMap := range rg.handlerFuncMap {
-			url := "/" + rg.name + name
-			// 路由是匹配的
-			if r.RequestURI == url {
-				// 匹配Method
-				handler, ok := handlerFuncMap[method]
-
-				if ok {
-					// method 里面有路由
-					ctx := &Context{
-						W: w,
-						R: r,
-					}
-					handler(ctx)
-					return
-				}
-				// 方法不匹配
-				w.WriteHeader(http.StatusMethodNotAllowed)
+		routerPath := SubStringLast(r.RequestURI, "/"+rg.name)
+		node := rg.tree.Get(routerPath)
+		if node != nil {
+			// 路由匹配上了
+			ctx := &Context{
+				W: w,
+				R: r,
+			}
+			handler, ok := rg.handlerFuncMap[node.routerName][method]
+			if ok {
+				handler(ctx)
 				return
 			}
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
 }
 
 func (e *Engine) Run() {
-	//for _, rg := range e.routerGroups {
-	//	for name, handlerFunc := range rg.handlerFuncMap {
-	//		http.HandleFunc("/"+rg.name+name, handlerFunc)
-	//	}
-	//}
 	http.Handle("/", e)
 	err := http.ListenAndServe(":8111", nil)
 	if err != nil {
