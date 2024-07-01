@@ -7,31 +7,57 @@ import (
 
 func main() {
 	engine := server.New()
-	userGroup := engine.Group("user")
+
+	userGroup := engine.Group("/user")
+	userGroup.Use(func(next server.HandlerFunc) server.HandlerFunc {
+		return func(ctx *server.Context) {
+			fmt.Println("Router Group Pre Middleware 1")
+			next(ctx)
+			fmt.Println("Router Group Post Middleware 1")
+		}
+	})
+	userGroup.Use(func(next server.HandlerFunc) server.HandlerFunc {
+		return func(ctx *server.Context) {
+			fmt.Println("Router Group Pre Middleware 2")
+			next(ctx)
+			fmt.Println("Router Group Post Middleware 2")
+		}
+	})
+
 	userGroup.Get("/list", func(ctx *server.Context) {
+		fmt.Println("user list handler")
 		fmt.Fprintf(ctx.W, "/list")
+	}, func(next server.HandlerFunc) server.HandlerFunc {
+		return func(ctx *server.Context) {
+			fmt.Println("method Pre Middleware 1")
+			next(ctx)
+			fmt.Println("method Post Middleware 1")
+		}
+	}, func(next server.HandlerFunc) server.HandlerFunc {
+		return func(ctx *server.Context) {
+			fmt.Println("method Pre Middleware 2")
+			next(ctx)
+			fmt.Println("method Post Middleware 2")
+		}
 	})
-	userGroup.Get("/list/hello", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/list/hello")
+	userGroup.Get("/add", func(ctx *server.Context) {
+		fmt.Fprintf(ctx.W, "/add")
 	})
-	userGroup.Get("/list/*/hello", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/list/*/hello")
+
+	productGroup := engine.Group("/product")
+	productGroup.Get("/:id/:name", func(ctx *server.Context) {
+		fmt.Fprintf(ctx.W, "/:id/:name")
 	})
-	userGroup.Post("/info", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/info")
+
+	deptGroup := engine.Group("/dept")
+	deptGroup.Get("/*", func(ctx *server.Context) {
+		fmt.Fprintf(ctx.W, "/*")
 	})
-	productGroup := engine.Group("product")
-	productGroup.Get("/list", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/list")
+
+	menuGroup := engine.Group("/menu")
+	menuGroup.Get("/*/info", func(ctx *server.Context) {
+		fmt.Fprintf(ctx.W, "/*/info")
 	})
-	productGroup.Get("/hello/get", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/hello/get")
-	})
-	productGroup.Post("/info", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/info")
-	})
-	productGroup.Get("/get/:id", func(ctx *server.Context) {
-		fmt.Fprintf(ctx.W, "/get/:id")
-	})
+
 	engine.Run()
 }

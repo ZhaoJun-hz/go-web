@@ -23,5 +23,4 @@ func TestTreeNode(t *testing.T) {
 	fmt.Println(node)
 	node = root.Get("/order/get/aaa")
 	fmt.Println(node)
-
 }
